@@ -1,31 +1,63 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./Carousel.css";
 
-const Carousel = ({ images, onSelect, selectUrls }) => {
-  const [offset, setOffset] = useState(0);
+const COPIES = 5;
 
-  const handleNext = () => {
-    setOffset((prev) => (prev + 1) % images.length);
+const Carousel = ({ images, onSelect, selectUrls }) => {
+  const len = images?.length || 0;
+  const middle = Math.floor(COPIES / 2) * len;
+  const [offset, setOffset] = useState(middle);
+  const trackRef = useRef(null);
+
+  if (!images || len === 0) {
+    return <div className="loading">Завантаження зображень...</div>;
+  }
+
+  const slides = Array.from({ length: COPIES }, () => images).flat();
+
+  const jumpWithoutAnimation = (newOffset) => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.style.transition = "none";
+    setOffset(newOffset);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        track.style.transition = "transform 0.35s ease";
+      });
+    });
   };
 
-  const handlePrev = () => {
-    setOffset((prev) => (prev - 1 + images.length) % images.length);
+    const handlePrev = () => {
+      const prev = offset - 1;
+      setOffset(prev);
+      if (prev <= 0) {
+        setTimeout(() => jumpWithoutAnimation(prev + len), 350);
+      }
+    };
+
+  const handleNext = () => {
+    const next = offset + 1;
+    setOffset(next);
+    if (next >= len * (COPIES - 1)) {
+      setTimeout(() => jumpWithoutAnimation(next - len), 350);
+    }
   };
 
   return (
     <div className="carousel">
-      <button className="arrow left" onClick={handlePrev}>
-        {" "}
-        ❬
-      </button>
+      <button className="arrow left" onClick={handlePrev}>❬</button>
       <div className="viewport">
         <div
+          ref={trackRef}
           className="track"
-          style={{ transform: `translateX(-${offset * 100}%)` }}
+          style={{
+            transform: `translateX(-${offset * 100}%)`,
+            transition: "transform 0.35s ease",
+          }}
         >
-          {images.map((img) => (
+          {slides.map((img, i) => (
             <div
-              key={img.id}
+              key={i}
               className={`slide ${selectUrls.includes(img.url) ? "active" : ""}`}
               onClick={() => onSelect(img.url)}
             >
@@ -34,9 +66,7 @@ const Carousel = ({ images, onSelect, selectUrls }) => {
           ))}
         </div>
       </div>
-      <button className="arrow right" onClick={handleNext}>
-        ❭
-      </button>
+      <button className="arrow right" onClick={handleNext}>❭</button>
     </div>
   );
 };
