@@ -7,11 +7,8 @@ function App() {
   const [selectedUrls, setSelectedUrls] = useState([]);
 
  useEffect(() => {
-   fetch("https://picsum.photos/v2/list?page=1&limit=10")
-     .then((res) => {
-       if (!res.ok) throw new Error("Помилка завантаження");
-       return res.json();
-     })
+   fetch("https://picsum.photos/v2/list?page=1&limit=30")
+     .then((res) => res.json())
      .then((data) => {
        const formatted = data.map((item) => ({
          id: item.id,
@@ -19,7 +16,7 @@ function App() {
        }));
        setImages(formatted);
      })
-     .catch((err) => console.error("Ups!", err));
+     .catch((err) => console.error("Помилка завантаження:", err));
  }, []);
 
   const handleSelect = (url) => {
